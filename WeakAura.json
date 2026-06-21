@@ -1,0 +1,700 @@
+{
+  "d": {
+    "actions": {
+      "finish": [],
+      "init": {
+        "custom": "aura_env.casters = {\n    [102]= true, -- Balance\n    [1467]= true, -- Devastation\n    [253]= true, -- Beast Mastery\n    [254]= true, -- Marskmanship\n    [62]= true, -- Arcane\n    [63]= true, -- Fire\n    [64]= true, -- Frost\n    [258]= true, -- Shadow\n    [262]= true, -- Elemental\n    [265]= true, -- Affliction\n    [266]= true, -- Demonology\n    [267]= true -- Destruction\n}\n\naura_env.melee = {\n    [250]= true, -- Blood\n    [251]= true, -- Frost\n    [252]= true, -- Unholy\n    [577]= true, -- Havok\n    [581]= true, -- Vengeance\n    [103]= true, -- Feral\n    [104]= true, -- Guardian\n    [255]= true, -- Survival\n    [268]= true, -- Brewmaster\n    [269]= true, -- Windwalker\n    [70]= true,  -- Retribution\n    [259]= true, -- Assasination\n    [260]= true, -- Outlaw\n}\n\naura_env.specMap = {\n    250, -- Death Knight - Blood\n    251, -- Death Knight - Frost\n    252, -- Death Knight - Unholy\n    102, -- Druid - Balance\n    103, -- Druid - Feral\n    104, -- Druid - Guardian\n    105, -- Druid - Restoration\n    1467, -- Evoker - Devastation\n    1469, -- Evoker - Preservation\n    253, -- Hunter - Beast Mastery\n    254, -- Hunter - Marksmanship\n    255, -- Hunter - Survival\n    62, -- Mage - Arcane\n    63, -- Mage - Fire\n    64, -- Mage - Frost\n    268, -- Monk - Brewmaster\n    270, -- Monk - Windwalker\n    269, -- Monk - Mistweaver\n    65, -- Paladin - Holy\n    66, -- Paladin - Protection\n    70, -- Paladin - Retribution\n    256, -- Priest - Discipline\n    257, -- Priest - Holy\n    258, -- Priest - Shadow\n    259, -- Rogue - Assassination\n    260, -- Rogue - Outlaw\n    261, -- Rogue - Subtlety\n    262, -- Shaman - Elemental\n    263, -- Shaman - Enhancement\n    264, -- Shaman - Restoration\n    265, -- Warlock - Affliction\n    266, -- Warlock - Demonology\n    267, -- Warlock - Destruction\n    71, -- Warrior - Arms\n    72, -- Warrior - Fury\n    73, -- Warrior - Protection\n}\n\naura_env.classMap = {\n    6, -- Death Knight\n    12, -- Demon Hunter\n    11, -- Druid\n    13, -- Evoker\n    3, -- Hunter\n    8, -- Mage\n    10, -- Monk\n    2, -- Paladin\n    5, -- Priest\n    4, -- Rogue\n    7, -- Shaman\n    9, -- Warlock\n    1, -- Warrior\n}\n\naura_env.mapMap = {\n    1552,--Ashamane’s Fall\n    1504,--Black Rook Hold Arena    \n    1672,--Blade’s Edge Arena    \n    617,--Dalaran Sewers\n    2373,--Empyrean Domain    \n    2547,--Enigma Crucible    \n    1852,--Hook Point\n    2509,--Maldraxxus Coliseum    \n    1911,--Mugambala\n    1505,--Nagrand Arena    \n    2563,--Nokhudon Proving Grounds\n    572,--Ruins of Lordaeron    \n    2167,--The Robodrome\n    1134,--Tiger’s Peak    \n    980,--Tol’Viron Arena\n}\n\n\naura_env.compMap = {\n    \"Caster Cleave\",\n    \"Melee Cleave\",\n    \"Caster/Melee\"\n}\n\naura_env.CanSpec = function(talentName)\n    local configID = C_ClassTalents.GetActiveConfigID()\n    local configInfo = C_Traits.GetConfigInfo(configID)\n    \n    for _, treeID in ipairs(configInfo.treeIDs) do\n        local nodes = C_Traits.GetTreeNodes(treeID)\n        for i, nodeID in ipairs(nodes) do\n            local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID)\n            for _, entryID in ipairs(nodeInfo.entryIDs) do\n                local entryInfo = C_Traits.GetEntryInfo(configID, entryID)\n                if entryInfo and entryInfo.definitionID then\n                    local definition = C_Traits.GetDefinitionInfo(entryInfo.definitionID)\n                    local spellInfo = GetSpellInfo(definition.spellID)\n                    if spellInfo == talentName then\n                        return true\n                    end\n                end\n            end\n        end\n    end\n    for _, pvpTalentID in pairs(C_SpecializationInfo.GetPvpTalentSlotInfo(1).availableTalentIDs) do\n        local pvpTalentInfo = C_SpecializationInfo.GetPvpTalentInfo(pvpTalentID)\n        if pvpTalentInfo.name == talentName then return true end\n    end\n    return false\nend\n\naura_env.IsSpecced = function(talentName)\n    local configID = C_ClassTalents.GetActiveConfigID()\n    local configInfo = C_Traits.GetConfigInfo(configID)\n    \n    for _, treeID in ipairs(configInfo.treeIDs) do\n        local nodes = C_Traits.GetTreeNodes(treeID)\n        for i, nodeID in ipairs(nodes) do\n            local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID)\n            for _, entryID in ipairs(nodeInfo.entryIDsWithCommittedRanks) do\n                local entryInfo = C_Traits.GetEntryInfo(configID, entryID)\n                if entryInfo and entryInfo.definitionID then\n                    local definition = C_Traits.GetDefinitionInfo(entryInfo.definitionID)\n                    local spellInfo = GetSpellInfo(definition.spellID)\n                    if spellInfo == talentName then\n                        return true\n                    end\n                end\n            end\n        end\n    end\n    for _, pvpTalentID in pairs(C_SpecializationInfo.GetAllSelectedPvpTalentIDs()) do\n        local pvpTalentInfo = C_SpecializationInfo.GetPvpTalentInfo(pvpTalentID)\n        if pvpTalentInfo.name == talentName then return true end\n    end\n    return false\nend",
+        "do_custom": true
+      },
+      "start": []
+    },
+    "alpha": 1,
+    "anchorFrameType": "SCREEN",
+    "anchorPoint": "CENTER",
+    "animation": {
+      "finish": {
+        "duration_type": "seconds",
+        "easeStrength": 3,
+        "easeType": "none",
+        "type": "none"
+      },
+      "main": {
+        "duration_type": "seconds",
+        "easeStrength": 3,
+        "easeType": "none",
+        "type": "none"
+      },
+      "start": {
+        "duration_type": "seconds",
+        "easeStrength": 3,
+        "easeType": "none",
+        "type": "none"
+      }
+    },
+    "authorOptions": [
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "classGroup",
+        "limitType": "none",
+        "name": "Against class",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "desc": "",
+            "key": "class",
+            "name": "Opponent Class",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Death Knight",
+              "Demon Hunter",
+              "Druid",
+              "Evoker",
+              "Hunter",
+              "Mage",
+              "Monk",
+              "Paladin",
+              "Priest",
+              "Rogue",
+              "Shaman",
+              "Warlock",
+              "Warrior"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "width": 1
+      },
+      {
+        "noMerge": false,
+        "text": "",
+        "type": "header",
+        "useName": false,
+        "width": 1
+      },
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "specGroup",
+        "limitType": "none",
+        "name": "Against spec",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "desc": "",
+            "key": "spec",
+            "name": "Opponent Spec",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Death Knight - Blood",
+              "Death Knight - Frost",
+              "Death Knight - Unholy",
+              "Druid - Balance",
+              "Druid - Feral",
+              "Druid - Guardian",
+              "Druid - Restoration",
+              "Evoker - Devastation",
+              "Evoker - Preservation",
+              "Hunter - Beast Mastery",
+              "Hunter - Marksmanship",
+              "Hunter - Survival",
+              "Mage - Arcane",
+              "Mage - Fire",
+              "Mage - Frost",
+              "Monk - Brewmaster",
+              "Monk - Windwalker",
+              "Monk - Mistweaver",
+              "Paladin - Holy",
+              "Paladin - Protection",
+              "Paladin - Retribution",
+              "Priest - Discipline",
+              "Priest - Holy",
+              "Priest - Shadow",
+              "Rogue - Assassination",
+              "Rogue - Outlaw",
+              "Rogue - Subtlety",
+              "Shaman - Elemental",
+              "Shaman - Enhancement",
+              "Shaman - Restoration",
+              "Warlock - Affliction",
+              "Warlock - Demonology",
+              "Warlock - Destruction",
+              "Warrior - Arms",
+              "Warrior - Fury",
+              "Warrior - Protection"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "width": 1
+      },
+      {
+        "noMerge": false,
+        "text": "",
+        "type": "header",
+        "useName": false,
+        "width": 1
+      },
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "compTypeGroup",
+        "limitType": "none",
+        "name": "Against 3v3 comp type",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "key": "compType",
+            "name": "Comp Type",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Caster Cleave",
+              "Melee Cleave",
+              "Caster/Melee"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "useDesc": false,
+        "width": 1
+      },
+      {
+        "noMerge": false,
+        "text": "",
+        "type": "header",
+        "useName": false,
+        "width": 1
+      },
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "mapGroup",
+        "limitType": "none",
+        "name": "On map",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "key": "map",
+            "name": "Map",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Ashamane's Fall",
+              "Black Rook Hold",
+              "Blade's Edge",
+              "Dalaran Sewers",
+              "Empyrean Domain",
+              "Enigma Crucible",
+              "Hook Point",
+              "Maldraxxus Coliseum",
+              "Mugambala",
+              "Nagrand Arena",
+              "Nohudon Proving Grounds",
+              "Ruins of Lardaeron",
+              "The Robodrome",
+              "Tiger's Peak",
+              "Tol'Viron"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "useDesc": false,
+        "width": 1
+      },
+      {
+        "noMerge": false,
+        "text": "",
+        "type": "header",
+        "useName": false,
+        "width": 1
+      },
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "arenaTypeGroup",
+        "limitType": "none",
+        "name": "Arena Type",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "key": "arenaType",
+            "name": "Arena Type",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Solo Shuffle",
+              "2v2",
+              "3v3"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "useDesc": false,
+        "width": 1
+      },
+      {
+        "noMerge": false,
+        "text": "",
+        "type": "header",
+        "useName": false,
+        "width": 1
+      },
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "partnerClassGroup",
+        "limitType": "none",
+        "name": "With Partner Class",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "desc": "",
+            "key": "class",
+            "name": "Opponent Class",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Death Knight",
+              "Demon Hunter",
+              "Druid",
+              "Evoker",
+              "Hunter",
+              "Mage",
+              "Monk",
+              "Paladin",
+              "Priest",
+              "Rogue",
+              "Shaman",
+              "Warlock",
+              "Warrior"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "width": 1
+      },
+      {
+        "noMerge": false,
+        "text": "",
+        "type": "header",
+        "useName": false,
+        "width": 1
+      },
+      {
+        "collapse": false,
+        "groupType": "array",
+        "hideReorder": true,
+        "key": "partnerSpecGroup",
+        "limitType": "none",
+        "name": "With Partner Spec",
+        "nameSource": 3,
+        "noMerge": false,
+        "size": 10,
+        "subOptions": [
+          {
+            "default": 1,
+            "desc": "",
+            "key": "spec",
+            "name": "Partner Spec",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Death Knight - Blood",
+              "Death Knight - Frost",
+              "Death Knight - Unholy",
+              "Druid - Balance",
+              "Druid - Feral",
+              "Druid - Guardian",
+              "Druid - Restoration",
+              "Evoker - Devastation",
+              "Evoker - Preservation",
+              "Hunter - Beast Mastery",
+              "Hunter - Marksmanship",
+              "Hunter - Survival",
+              "Mage - Arcane",
+              "Mage - Fire",
+              "Mage - Frost",
+              "Monk - Brewmaster",
+              "Monk - Windwalker",
+              "Monk - Mistweaver",
+              "Paladin - Holy",
+              "Paladin - Protection",
+              "Paladin - Retribution",
+              "Priest - Discipline",
+              "Priest - Holy",
+              "Priest - Shadow",
+              "Rogue - Assassination",
+              "Rogue - Outlaw",
+              "Rogue - Subtlety",
+              "Shaman - Elemental",
+              "Shaman - Enhancement",
+              "Shaman - Restoration",
+              "Warlock - Affliction",
+              "Warlock - Demonology",
+              "Warlock - Destruction",
+              "Warrior - Arms",
+              "Warrior - Fury",
+              "Warrior - Protection"
+            ],
+            "width": 1
+          },
+          {
+            "default": 1,
+            "key": "should",
+            "name": "",
+            "type": "select",
+            "useDesc": false,
+            "values": [
+              "Should Have",
+              "Shouldn't Have"
+            ],
+            "width": 1
+          },
+          {
+            "default": "",
+            "key": "talent",
+            "length": 10,
+            "multiline": false,
+            "name": "Talent",
+            "type": "input",
+            "useDesc": false,
+            "useLength": false,
+            "width": 1
+          }
+        ],
+        "type": "group",
+        "useCollapse": false,
+        "width": 1
+      }
+    ],
+    "automaticWidth": "Auto",
+    "color": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "conditions": [],
+    "config": {
+      "arenaTypeGroup": [],
+      "classGroup": [],
+      "compTypeGroup": {
+        "0": {
+          "compType": 1,
+          "should": 1,
+          "talent": ""
+        }
+      },
+      "mapGroup": [],
+      "partnerClassGroup": [],
+      "partnerSpecGroup": [],
+      "specGroup": {
+        "0": {
+          "should": 1,
+          "spec": 1,
+          "talent": ""
+        }
+      }
+    },
+    "cooldown": true,
+    "cooldownEdge": false,
+    "cooldownSwipe": true,
+    "cooldownTextDisabled": false,
+    "customTextUpdate": "event",
+    "desaturate": false,
+    "displayText": "%n",
+    "displayText_format_n_format": "none",
+    "displayText_format_p_format": "timed",
+    "displayText_format_p_time_dynamic_threshold": 60,
+    "displayText_format_p_time_format": 0,
+    "displayText_format_p_time_legacy_floor": false,
+    "displayText_format_p_time_mod_rate": true,
+    "displayText_format_p_time_precision": 1,
+    "fixedWidth": 200,
+    "font": "Friz Quadrata TT",
+    "fontSize": 40,
+    "frameStrata": 1,
+    "height": 64,
+    "icon": true,
+    "iconSource": -1,
+    "id": "Arena Talent Reminder",
+    "information": [],
+    "internalVersion": 65,
+    "inverse": false,
+    "justify": "LEFT",
+    "keepAspectRatio": false,
+    "load": {
+      "class": {
+        "multi": []
+      },
+      "size": {
+        "multi": {
+          "arena": true,
+          "ratedarena": true
+        }
+      },
+      "spec": {
+        "multi": []
+      },
+      "talent": {
+        "multi": []
+      },
+      "use_combat": false,
+      "use_never": false,
+      "use_size": false
+    },
+    "outline": "OUTLINE",
+    "regionType": "text",
+    "selfPoint": "CENTER",
+    "semver": "1.0.11",
+    "shadowColor": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "shadowXOffset": 1,
+    "shadowYOffset": -1,
+    "source": "import",
+    "subRegions": [
+      {
+        "type": "subbackground"
+      }
+    ],
+    "tocversion": 100100,
+    "triggers": {
+      "1": {
+        "trigger": {
+          "custom": "function(event, ...)\n    if event == \"OPTIONS\" or event == \"ARENA_PREP_OPPONENT_SPECIALIZATIONS\" then\n        NotifyInspect(\"party1\")\n        NotifyInspect(\"party2\")\n    end\n    \n    local _\n    local i\n    \n    local classGroup = aura_env.config[\"classGroup\"]\n    if classGroup then\n        for i=1, #classGroup do\n            local talentName = classGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local classID = aura_env.classMap[classGroup[i][\"class\"]]\n                local should = classGroup[i][\"should\"]\n                local className = GetClassInfo(classID)\n                local classFound = false\n                local spellFound = aura_env.IsSpecced(talentName)\n                \n                for i=1,GetNumArenaOpponentSpecs() do\n                    if GetClassIDFromSpecID(GetArenaOpponentSpec(i)) == classID then\n                        classFound = true\n                    end\n                end\n                if event == \"OPTIONS\" then\n                    classFound = true \n                end\n                \n                if should == 1 and classFound and not spellFound then\n                    aura_env.text = \"Found \" .. className .. \" but missing \" .. talentName\n                    return true\n                elseif should == 2 and classFound and spellFound then\n                    aura_env.text = \"Found \" .. className .. \" but have \" .. talentName\n                    return true\n                end\n            end\n        end\n    end\n    \n    local specGroup = aura_env.config[\"specGroup\"]\n    if specGroup then\n        for i=1, #specGroup do\n            local talentName = specGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local specID = aura_env.specMap[specGroup[i][\"spec\"]]\n                local should = specGroup[i][\"should\"]\n                local _, specName = GetSpecializationInfoByID(specID)\n                local specFound = false\n                local spellFound = aura_env.IsSpecced(talentName)\n                \n                for i=1,GetNumArenaOpponentSpecs() do\n                    if GetArenaOpponentSpec(i) == specID then\n                        specFound = true\n                    end\n                end\n                if event == \"OPTIONS\" then\n                    specFound = true \n                end\n                \n                if should == 1 and specFound and not spellFound then\n                    aura_env.text = \"Found \" .. specName .. \" but missing \" .. talentName\n                    return true\n                elseif should == 2 and specFound and spellFound then\n                    aura_env.text = \"Found \" .. specName .. \" but have \" .. talentName\n                    return true\n                end\n            end\n        end\n    end\n    \n    \n    local compTypeGroup = aura_env.config[\"compTypeGroup\"]\n    local isTest = event == \"OPTIONS\"\n    local isThrees = compTypeGroup and GetNumArenaOpponents() == 3 and C_PvP.IsSoloShuffle() == false\n    if isTest or isThrees then\n        for i=1, #compTypeGroup do\n            local talentName = compTypeGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local compID = compTypeGroup[i][\"compType\"]\n                local should = compTypeGroup[i][\"should\"]\n                local compFound = false\n                local spellFound = aura_env.IsSpecced(talentName)\n                local numMelee = 0\n                local numCasters = 0\n                \n                for i=1,GetNumArenaOpponentSpecs() do\n                    if aura_env.melee[GetArenaOpponentSpec(i)] then\n                        numMelee = numMelee + 1\n                    elseif aura_env.casters[GetArenaOpponentSpec(i)] then\n                        numCasters = numCasters + 1\n                    end\n                end\n                \n                if numCasters == 2 then\n                    compFound = compID == 1\n                elseif numMelee == 2 then\n                    compFound = compID == 2\n                elseif numMelee == 1 and numCasters == 1 then\n                    compFound = compID == 3\n                end\n                \n                if event == \"OPTIONS\" then\n                    compFound = true \n                end\n                \n                local compName = aura_env.compMap[compID]\n                if should == 1 and compFound and not spellFound then    \n                    aura_env.text = \"Found \" .. compName .. \" but missing \" .. talentName\n                    return true\n                elseif should == 2 and compFound and spellFound then\n                    aura_env.text = \"Found \" .. compName .. \" but have \" .. talentName\n                end\n            end    \n        end\n    end\n    \n    local mapGroup = aura_env.config[\"mapGroup\"]\n    if mapGroup then\n        for i=1, #mapGroup do\n            local talentName = mapGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local instanceID = aura_env.mapMap[mapGroup[i][\"map\"]]\n                local should = mapGroup[i][\"should\"]\n                local spellFound = aura_env.IsSpecced(talentName)\n                local mapName, _, _, _, _, _, _, currentInstanceID = GetInstanceInfo()\n                local mapFound = instanceID == currentInstanceID\n                \n                if event == \"OPTIONS\" then\n                    mapFound = true \n                end\n                \n                if should == 1 and mapFound and not spellFound then\n                    aura_env.text = \"Found \" .. mapName .. \" but missing \" .. talentName\n                    return true\n                elseif should == 2 and mapFound and spellFound then\n                    aura_env.text = \"Found \" .. mapName .. \" but have \" .. talentName\n                    return true\n                end\n            end\n        end\n    end\n    \n    local arenaTypeGroup = aura_env.config[\"arenaTypeGroup\"]\n    if arenaTypeGroup then\n        for i=1, #arenaTypeGroup do\n            local talentName = arenaTypeGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local isSolo = C_PvP.IsSoloShuffle()\n                local isThrees = GetNumArenaOpponents() == 3 and C_PvP.IsSoloShuffle() == false\n                local isTwos = GetNumArenaOpponents() == 2\n                local typeName\n                if arenaTypeGroup[i][\"arenaType\"] == 1 then \n                    typeName = \"Solo Shuffle\" \n                elseif arenaTypeGroup[i][\"arenaType\"] == 2 then \n                    typeName = \"2v2\" \n                elseif arenaTypeGroup[i][\"arenaType\"] == 3 then \n                    typeName = \"3v3\" \n                end\n                local arenaTypeFound = false\n                local should = arenaTypeGroup[i][\"should\"]\n                local spellFound = aura_env.IsSpecced(talentName)\n                \n                if isSolo and arenaTypeGroup[i][\"arenaType\"] == 1 then \n                    arenaTypeFound = true\n                elseif isTwos and arenaTypeGroup[i][\"arenaType\"] == 2 then \n                    arenaTypeFound = true\n                elseif isThrees and arenaTypeGroup[i][\"arenaType\"] == 3 then \n                    arenaTypeFound = true \n                end\n                \n                if event == \"OPTIONS\" then\n                    arenaTypeFound = true \n                end\n                \n                if should == 1 and arenaTypeFound and not spellFound then\n                    aura_env.text = \"Found \" .. typeName .. \" but missing \" .. talentName\n                    return true\n                elseif should == 2 and arenaTypeFound and spellFound then\n                    aura_env.text = \"Found \" .. typeName .. \" but have \" .. talentName\n                    return true\n                end\n            end\n        end\n    end\n    \n    local partnerClassGroup = aura_env.config[\"partnerClassGroup\"]\n    if partnerClassGroup then\n        for i=1, #partnerClassGroup do\n            local talentName = partnerClassGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local classID = aura_env.classMap[partnerClassGroup[i][\"class\"]]\n                local should = partnerClassGroup[i][\"should\"]\n                local className = GetClassInfo(classID)\n                local classFound = false\n                local spellFound = aura_env.IsSpecced(talentName)\n                local oneClassID = _, _, UnitClass(\"party1\")\n                local twoClassID = _, _, UnitClass(\"party2\")\n                \n                if oneClassID == classID or twoClassID == classID then\n                    classFound = true\n                end\n                \n                if event == \"OPTIONS\" then\n                    classFound = true \n                end\n                \n                if should == 1 and classFound and not spellFound then\n                    aura_env.text = \"Found \" .. className .. \" partner but missing \" .. talentName\n                    return true\n                elseif should == 2 and classFound and spellFound then\n                    aura_env.text = \"Found \" .. className .. \" partner but have \" .. talentName\n                    return true\n                end\n            end\n        end\n    end\n    \n    local partnerSpecGroup = aura_env.config[\"partnerSpecGroup\"]\n    if partnerSpecGroup then\n        for i=1, #partnerSpecGroup do\n            local talentName = partnerSpecGroup[i][\"talent\"]\n            if aura_env.CanSpec(talentName) then\n                local oneSpecID = GetInspectSpecialization(\"party1\")\n                local twoSpecID = GetInspectSpecialization(\"party2\")\n                local specID = aura_env.specMap[partnerSpecGroup[i][\"spec\"]]\n                local should = partnerSpecGroup[i][\"should\"]\n                local _, specName = GetSpecializationInfoByID(specID)\n                local specFound = false\n                local spellFound = aura_env.IsSpecced(talentName)\n                \n                if oneSpecID == specID or twoSpecID == specID then\n                    specFound = true\n                end\n                \n                if event == \"OPTIONS\" then\n                    specFound = true \n                end\n                \n                if should == 1 and specFound and not spellFound then\n                    aura_env.text = \"Found \" .. specName .. \" but missing \" .. talentName\n                    return true\n                elseif should == 2 and specFound and spellFound then\n                    aura_env.text = \"Found \" .. specName .. \" but have \" .. talentName\n                    return true\n                end\n            end\n        end\n    end\n    \n    return false\nend",
+          "customName": "function ()\n   return aura_env.text or \"\" \nend",
+          "custom_hide": "timed",
+          "custom_type": "event",
+          "debuffType": "HELPFUL",
+          "event": "Chat Message",
+          "events": "ARENA_PREP_OPPONENT_SPECIALIZATIONS,SPELL_CHANGED,INSPECT_READY",
+          "genericShowOn": "showOnCooldown",
+          "names": [],
+          "realSpellName": 0,
+          "sourceUnit": "player",
+          "spellIds": [],
+          "spellName": "Evangalism",
+          "subeventPrefix": "SPELL",
+          "subeventSuffix": "_CAST_SUCCESS",
+          "type": "custom",
+          "unit": "player",
+          "use_genericShowOn": true,
+          "use_sourceName": false,
+          "use_sourceUnit": true,
+          "use_spellName": true,
+          "use_track": true
+        },
+        "untrigger": []
+      },
+      "2": {
+        "trigger": {
+          "auraspellids": [
+            "32727"
+          ],
+          "debuffType": "HELPFUL",
+          "type": "aura2",
+          "unit": "player",
+          "useExactSpellId": true,
+          "useStacks": false
+        },
+        "untrigger": []
+      },
+      "activeTriggerMode": -10
+    },
+    "uid": "1YZp3RySWRc",
+    "url": "https://wago.io/DUkHuvVLD/12",
+    "useCooldownModRate": true,
+    "version": 12,
+    "wagoID": "DUkHuvVLD",
+    "width": 64,
+    "wordWrap": "WordWrap",
+    "xOffset": 7.0001831054688,
+    "yOffset": 281,
+    "zoom": 0
+  },
+  "m": "d",
+  "s": "5.5.2",
+  "v": 1421,
+  "wagoID": "DUkHuvVLD"
+}
