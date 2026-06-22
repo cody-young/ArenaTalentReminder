@@ -2,7 +2,7 @@
 ## Title: Arena Talent Reminder
 ## Notes: Reminds you to swap talents based on the enemy team, your partners, the map, and the bracket while in arena prep.
 ## Author: youngcody
-## Version: 1.0.0
+## Version: @project-version@
 ## SavedVariables: ArenaTalentReminderDB
 ## IconTexture: Interface\Icons\Spell_Nature_TimeStop
 

@@ -39,3 +39,10 @@ luac.out
 *.x86_64
 *.hex
 
+# Embedded libraries — fetched by the packager at release time (see .pkgmeta),
+# kept locally for in-game testing but not committed.
+/Libs/
+
+# Packager output
+/.release/
+

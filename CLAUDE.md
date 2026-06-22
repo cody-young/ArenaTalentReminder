@@ -59,6 +59,11 @@ field must match the in-game name exactly.
 - "Test mode" in General previews all rules on screen outside of a match.
 - Display only shows while the Arena Preparation buff is up (the window where you
   can still freely change talents), unless test mode is on.
-- Ace3 libs were copied from `Bartender4/libs`. To update, recopy those folders.
+- Ace3 libs live in `Libs/` locally but are **not committed** (gitignored). The
+  packager fetches them via `.pkgmeta` externals at release time. To refresh a
+  local copy for testing, recopy from another addon (e.g. `Bartender4/libs`) or
+  run the packager. Releases are cut by pushing a tag (e.g. `v1.0.1`), which
+  triggers `.github/workflows/release.yml` (BigWigsMods/packager) to build the
+  zip and publish a GitHub release.
 - Fixed vs the original WeakAura: partner-class matching (`UnitClass` return was
   being mis-assigned in the WA, so it never matched).
