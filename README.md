@@ -1,6 +1,7 @@
 # Arena Talent Reminder
 
 [![Latest release](https://img.shields.io/github/v/release/cody-young/ArenaTalentReminder)](https://github.com/cody-young/ArenaTalentReminder/releases/latest)
+[![CurseForge](https://img.shields.io/curseforge/dt/1583954?label=CurseForge&logo=curseforge)](https://www.curseforge.com/wow/addons/arenatalentreminder)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 A World of Warcraft addon that reminds you to swap talents during arena prep,
@@ -30,7 +31,8 @@ Ported from a personal WeakAura into a standalone, configurable addon.
 
 ## Installation
 
-- **CurseForge:** search for *Arena Talent Reminder* (recommended — auto-updates).
+- **CurseForge:** [Arena Talent Reminder](https://www.curseforge.com/wow/addons/arenatalentreminder)
+  (recommended — auto-updates).
 - **Manual:** download `ArenaTalentReminder-vX.Y.Z.zip` from the
   [latest release](https://github.com/cody-young/ArenaTalentReminder/releases/latest)
   and extract it into `World of Warcraft\_retail_\Interface\AddOns\`.
