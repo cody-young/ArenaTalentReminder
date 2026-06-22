@@ -18,6 +18,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify CurseForge secret
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        run: |
+          if [ -z "$CF_API_KEY" ]; then
+            echo "::warning title=CurseForge::CF_API_KEY secret is not set — CurseForge upload will be skipped."
+          else
+            echo "CF_API_KEY is set (length ${#CF_API_KEY})."
+          fi
+
       - name: Package and create GitHub release
         uses: BigWigsMods/packager@v2
         env:
