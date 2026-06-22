@@ -5,9 +5,7 @@
 ## Version: @project-version@
 ## SavedVariables: ArenaTalentReminderDB
 ## IconTexture: Interface\Icons\Spell_Nature_TimeStop
-# To enable CurseForge uploads, create the project on CurseForge, then uncomment
-# the next line and replace the number with your project's "Project ID":
-# ## X-Curse-Project-ID: 000000
+## X-Curse-Project-ID: 1583954
 
 # Libraries
 Libs\LibStub\LibStub.lua
