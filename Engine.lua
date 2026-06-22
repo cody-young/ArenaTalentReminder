@@ -189,12 +189,17 @@ end
 -- Evaluation
 --------------------------------------------------------------------------------
 
--- Returns an array of reminder strings (deduped). In test mode the presence
--- condition of every rule is treated as met, so you can preview your full set.
+-- Returns { reminders = {...}, notes = {...} }. Reminders are actionable; notes
+-- are informational lines for drops that were suppressed because another rule
+-- wants the same talent. In test mode every presence condition is treated as met
+-- and suppression is skipped, so /atr test previews each rule's raw output.
 function ATR:Evaluate(isTest)
     local rules = self.db.profile.rules
-    local messages, seen = {}, {}
+    local showNotes = self.db.profile.display.showNotes
 
+    -- Build a context for every rule that can actually fire (lift the shared
+    -- match/has/label/variant work out of the message loop).
+    local contexts = {}
     for _, cat in ipairs(ns.categories) do
         for i, rule in ipairs(rules[cat.key]) do
             local talentName = rule.talent
@@ -204,38 +209,91 @@ function ATR:Evaluate(isTest)
                 self:Debug("[%s #%d] '%s' not available to your current spec (CanSpec=false) -> skipped",
                     cat.key, i, talentName)
             else
-                -- presence 1 = subject should be present, 2 = subject should be absent
                 local wantPresent = (rule.presence or 1) == 1
-                local matched = cat.match(rule)
-                local condMet = isTest or (matched == wantPresent)
-                local has = ns.IsSpecced(talentName)
                 local should = rule.should or 1
-                local subject = cat.label(rule)
+                -- Base variant, plus a mirrored variant (inverse presence AND
+                -- inverse should/shouldn't) when the rule opts in.
+                local variants = { { wantPresent, should } }
+                if rule.mirror then
+                    variants[#variants + 1] = { not wantPresent, should == 1 and 2 or 1 }
+                end
 
-                self:Debug("[%s #%d] subject='%s' wantPresent=%s matched=%s condMet=%s | talent='%s' have=%s should=%s",
-                    cat.key, i, subject, tostring(wantPresent), tostring(matched),
-                    tostring(condMet), talentName, tostring(has),
-                    should == 1 and "have" or "drop")
+                local ctx = {
+                    key = cat.key, i = i, talent = talentName,
+                    matched = cat.match(rule),
+                    has = ns.IsSpecced(talentName),
+                    subject = cat.label(rule),
+                    variants = variants,
+                }
+                contexts[#contexts + 1] = ctx
 
-                if condMet then
-                    local context = wantPresent and ("Found " .. subject) or ("No " .. subject)
-                    local msg
+                self:Debug("[%s #%d] subject='%s' wantPresent=%s matched=%s have=%s should=%s mirror=%s",
+                    cat.key, i, ctx.subject, tostring(wantPresent), tostring(ctx.matched),
+                    tostring(ctx.has), should == 1 and "have" or "drop", tostring(rule.mirror))
+            end
+        end
+    end
 
-                    if should == 1 and not has then
-                        msg = ("%s but missing %s"):format(context, talentName)
-                    elseif should == 2 and has then
-                        msg = ("%s but have %s"):format(context, talentName)
-                    end
+    -- Pass 1: which talents are currently *wanted* (a live "should have" variant
+    -- whose presence condition is met) and by which matchups. Always live.
+    local wantedBy = {}
+    for _, ctx in ipairs(contexts) do
+        for _, v in ipairs(ctx.variants) do
+            local wantPresent, should = v[1], v[2]
+            if should == 1 and ctx.matched == wantPresent then
+                local set = wantedBy[ctx.talent]
+                if not set then set = {}; wantedBy[ctx.talent] = set end
+                set[ctx.subject] = true
+            end
+        end
+    end
 
-                    if msg and not seen[msg] then
-                        seen[msg] = true
-                        messages[#messages + 1] = msg
+    -- Pass 2: build messages. A drop ("shouldn't have" while you have it) is
+    -- suppressed when something wants the talent; surfaced as a gray note instead.
+    local reminders, seenReminder = {}, {}
+    local notes, seenNote = {}, {}
+    for _, ctx in ipairs(contexts) do
+        for _, v in ipairs(ctx.variants) do
+            local wantPresent, should = v[1], v[2]
+            if isTest or (ctx.matched == wantPresent) then
+                local context = wantPresent and ("Found " .. ctx.subject) or ("No " .. ctx.subject)
+                if should == 1 and not ctx.has then
+                    local msg = ("%s but missing %s"):format(context, ctx.talent)
+                    if not seenReminder[msg] then
+                        seenReminder[msg] = true
+                        reminders[#reminders + 1] = msg
                         self:Debug("  -> REMIND: %s", msg)
+                    end
+                elseif should == 2 and ctx.has then
+                    local wanters = (not isTest) and wantedBy[ctx.talent] or nil
+                    if wanters then
+                        -- This "drop" rule is overruled by a rule that wants the
+                        -- talent; surface which rule, as an informational note.
+                        local suppressed = wantPresent and ("vs " .. ctx.subject)
+                            or ("no " .. ctx.subject)
+                        local noteKey = ctx.talent .. "\0" .. suppressed
+                        if showNotes and not seenNote[noteKey] then
+                            seenNote[noteKey] = true
+                            local list = {}
+                            for s in pairs(wanters) do list[#list + 1] = s end
+                            table.sort(list)
+                            notes[#notes + 1] = ("%s: \"%s\" says drop — kept (wanted vs %s)"):format(
+                                ctx.talent, suppressed, table.concat(list, ", "))
+                        end
+                        self:Debug("  -> suppressed drop of '%s' from [%s #%d] (wanted vs %s)",
+                            ctx.talent, ctx.key, ctx.i, next(wanters) or "?")
+                    else
+                        local msg = ("%s but have %s"):format(context, ctx.talent)
+                        if not seenReminder[msg] then
+                            seenReminder[msg] = true
+                            reminders[#reminders + 1] = msg
+                            self:Debug("  -> REMIND: %s", msg)
+                        end
                     end
                 end
             end
         end
     end
 
-    return messages
+    return { reminders = reminders, notes = notes }
 end

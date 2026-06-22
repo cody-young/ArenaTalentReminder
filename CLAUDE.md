@@ -38,15 +38,37 @@ Death Knight - Unholy but missing Way of the Crane."*
 
 ## Rule model
 
-Each rule is `{ subject = <dropdown index>, presence = 1|2, should = 1|2, talent = "<name>" }`
-stored under `db.profile.rules[categoryKey]` (`class`, `spec`, `compType`, `map`,
-`arenaType`, `partnerClass`, `partnerSpec`). `presence` 1 = subject "is present",
-2 = "is absent" (negation — e.g. *not* facing Unholy). `should` 1 = "Should have",
-2 = "Shouldn't have". The rule fires when the presence condition is met AND the
-talent (should/shouldn't) condition is violated. A rule only evaluates if
-`ns.CanSpec(talent)` is true (the talent is available to your current spec), so
-rules for other classes stay silent. `presence` defaults to 1 when missing, so
-pre-existing saved rules keep their old behavior.
+Each rule is `{ subject = <dropdown index>, presence = 1|2, should = 1|2,
+talent = "<name>", mirror = bool }` stored under `db.profile.rules[categoryKey]`
+(`class`, `spec`, `compType`, `map`, `arenaType`, `partnerClass`, `partnerSpec`).
+`presence` 1 = subject "is present", 2 = "is absent" (negation — e.g. *not* facing
+Unholy). `should` 1 = "Should have", 2 = "Shouldn't have". The rule fires when the
+presence condition is met AND the talent (should/shouldn't) condition is violated.
+
+`mirror` (the "Also apply the inverse" toggle) additionally evaluates a second
+variant with **both** `presence` and `should` flipped. So "against Unholy → should
+have X" also reminds "not against Unholy → shouldn't have X". At most one variant
+can fire at a time (the presence conditions are mutually exclusive). See
+`ATR:Evaluate`'s `variants` logic in [Engine.lua](Engine.lua).
+
+**Want-set suppression.** `ATR:Evaluate` is two-pass over pre-built rule
+`contexts`. Pass 1 computes `wantedBy[talent]` — every talent a currently-active
+"should have" variant wants, and by which matchups. Pass 2 builds messages, but a
+"drop" (a `should == 2` variant where you currently `has` the talent) is
+**suppressed** if anything wants that talent — so a talent good vs Unholy *and*
+Beast Mastery isn't flagged for removal when you face only one of them. "Want it"
+always beats "drop it" (the conflict-resolution policy). A suppressed drop instead
+emits an informational **note** naming the overruled rule (`X: "no <subject>" says
+drop — kept (wanted vs ...)`, gated on `display.showNotes`, default on, deduped by
+talent+suppressed-subject). `Evaluate` returns `{ reminders = {...}, notes = {...} }`.
+[Display.lua](Display.lua) renders reminders in the large gold `f.text` and notes
+in a smaller gray `f.notes` FontString, each note line prefixed with an inline info
+icon; `ATR:LayoutDisplay` stacks the two blocks and sizes the border to hug them.
+Test mode skips suppression to preview each rule's raw output.
+
+A rule only evaluates if `ns.CanSpec(talent)` is true (the talent is available to
+your current spec), so rules for other classes stay silent. `presence`/`mirror`
+default to 1/false when missing, so pre-existing saved rules keep their behavior.
 
 Talents are matched by **name** (compared against the spell name of each talent
 tree entry and PvP talent), faithful to the original WeakAura — so the talent

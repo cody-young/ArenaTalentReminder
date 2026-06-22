@@ -208,6 +208,7 @@ local defaults = {
             fontSize = 24,
             showIcon = true,
             locked = true,
+            showNotes = true,
         },
     },
 }
@@ -299,9 +300,10 @@ function ATR:Refresh()
     end
 
     if self.testMode then
-        local messages = self:Evaluate(true)
-        self:Debug("Refresh: TEST mode -> %d message(s)", #messages)
-        self:UpdateDisplay(messages)
+        local result = self:Evaluate(true)
+        self:Debug("Refresh: TEST mode -> %d reminder(s), %d note(s)",
+            #result.reminders, #result.notes)
+        self:UpdateDisplay(result)
         return
     end
 
@@ -313,9 +315,10 @@ function ATR:Refresh()
         return
     end
 
-    local messages = self:Evaluate(false)
-    self:Debug("Refresh: in arena prep -> %d message(s)", #messages)
-    self:UpdateDisplay(messages)
+    local result = self:Evaluate(false)
+    self:Debug("Refresh: showing -> %d reminder(s), %d note(s)",
+        #result.reminders, #result.notes)
+    self:UpdateDisplay(result)
 end
 
 function ATR:OpenConfig()

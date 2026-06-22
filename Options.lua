@@ -25,7 +25,7 @@ local function BuildCategoryArgs(cat)
         order = 2,
         name = "Add Rule",
         func = function()
-            table.insert(rules, { subject = 1, presence = 1, should = 1, talent = "" })
+            table.insert(rules, { subject = 1, presence = 1, should = 1, talent = "", mirror = false })
             ATR:RefreshOptions()
             ATR:Refresh()
         end,
@@ -83,9 +83,26 @@ local function BuildCategoryArgs(cat)
                     get = function() return rule.talent end,
                     set = function(_, v) rule.talent = strtrim(v or ""); ATR:Refresh() end,
                 },
+                mirror = {
+                    type = "toggle",
+                    order = 5,
+                    width = "full",
+                    name = "Also apply the inverse",
+                    desc = function()
+                        local subj = cat.label(rule)
+                        local present = (rule.presence or 1) == 1
+                        local invWord = present and "absent" or "present"
+                        local invShould = (rule.should or 1) == 1 and "shouldn't have" or "should have"
+                        local t = (rule.talent ~= "" and rule.talent) or "the talent"
+                        return ("Also remind the opposite way: when %s is %s, you %s %s."):format(
+                            subj, invWord, invShould, t)
+                    end,
+                    get = function() return rule.mirror end,
+                    set = function(_, v) rule.mirror = v; ATR:Refresh() end,
+                },
                 remove = {
                     type = "execute",
-                    order = 5,
+                    order = 6,
                     width = 0.6,
                     name = "Delete",
                     func = function()
@@ -162,6 +179,18 @@ local function BuildOptions()
                         set = function(_, v)
                             ATR.db.profile.display.showIcon = v
                             ATR:UpdateDisplaySettings()
+                        end,
+                    },
+                    showNotes = {
+                        type = "toggle",
+                        order = 12.5,
+                        width = "full",
+                        name = "Show suppression notes",
+                        desc = "When a 'shouldn't have' reminder is suppressed because another rule wants the same talent, show a small gray note explaining why instead of hiding it silently.",
+                        get = function() return ATR.db.profile.display.showNotes end,
+                        set = function(_, v)
+                            ATR.db.profile.display.showNotes = v
+                            ATR:Refresh()
                         end,
                     },
                     scale = {
