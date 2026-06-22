@@ -6,9 +6,10 @@ local ADDON, ns = ...
 local ATR = LibStub("AceAddon-3.0"):NewAddon(ADDON, "AceConsole-3.0", "AceEvent-3.0")
 ns.ATR = ATR
 
--- The Arena Preparation buff. Present while you're in the starting room and can
--- still freely change talents; this is the only window the reminder shows in.
-local ARENA_PREP_SPELL = 32727
+-- The round-start marker is auto-cast by the player at the start of every round
+-- (including each Solo Shuffle round), so it's a reliable, class-agnostic signal
+-- to (re-)show the reminder. Hiding is driven by gates opening and combat.
+local ROUND_START_SPELL = 228212 -- Arena Starting Area Marker
 
 --------------------------------------------------------------------------------
 -- Lookup tables (ported from the WeakAura init action)
@@ -173,11 +174,12 @@ end
 -- Arena prep gate
 --------------------------------------------------------------------------------
 
-function ns.IsInArenaPrep()
-    if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID then
-        return C_UnitAuras.GetPlayerAuraBySpellID(ARENA_PREP_SPELL) ~= nil
-    end
-    return false
+-- Show only in an arena, before the player has "left" prep, and never in combat.
+function ATR:ShouldShow()
+    if select(2, IsInInstance()) ~= "arena" then return false end
+    if self.hidden then return false end
+    if UnitAffectingCombat("player") then return false end
+    return true
 end
 
 --------------------------------------------------------------------------------
@@ -187,6 +189,7 @@ end
 local defaults = {
     profile = {
         enabled = true,
+        debug = false,
         rules = {
             class = {},
             spec = {},
@@ -216,32 +219,55 @@ local defaults = {
 function ATR:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("ArenaTalentReminderDB", defaults, true)
     self.testMode = false
+    self.hidden = false
 
     self:SetupOptions()       -- Options.lua
     self:CreateDisplay()      -- Display.lua
 
-    self:RegisterChatCommand("atr", "OpenConfig")
-    self:RegisterChatCommand("arenatalentreminder", "OpenConfig")
+    self:RegisterChatCommand("atr", "HandleCommand")
+    self:RegisterChatCommand("arenatalentreminder", "HandleCommand")
+end
+
+-- Prints only when debug is on. Prefix makes it easy to spot/filter.
+function ATR:Debug(fmt, ...)
+    if not self.db or not self.db.profile.debug then return end
+    print("|cff33ff99[ATR]|r " .. (select("#", ...) > 0 and fmt:format(...) or fmt))
 end
 
 function ATR:OnEnable()
     self:RegisterEvent("ARENA_PREP_OPPONENT_SPECIALIZATIONS", "OnArenaPrep")
     self:RegisterEvent("ARENA_OPPONENT_UPDATE", "Refresh")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "Refresh")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnEnterWorld")
     self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "Refresh")
     self:RegisterEvent("GROUP_ROSTER_UPDATE", "OnRosterUpdate")
     self:RegisterEvent("INSPECT_READY", "Refresh")
     self:RegisterEvent("TRAIT_CONFIG_UPDATED", "Refresh")
     self:RegisterEvent("PLAYER_PVP_TALENT_UPDATE", "Refresh")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", "Refresh")
-    self:RegisterEvent("UNIT_AURA", "OnUnitAura")
+    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "OnSpellcast")
+    self:RegisterEvent("PVP_MATCH_ACTIVE", "HideReminder")   -- gates open
+    self:RegisterEvent("PLAYER_REGEN_DISABLED", "Refresh")   -- entering combat
+    self:RegisterEvent("PLAYER_REGEN_ENABLED", "Refresh")    -- leaving combat
 
     self:UpdateDisplaySettings()
     self:Refresh()
 end
 
+-- Gates have opened (or any other "match is live" signal): stop reminding.
+function ATR:HideReminder()
+    self.hidden = true
+    self:Refresh()
+end
+
+function ATR:OnEnterWorld()
+    -- Zoning in / first round: reset to shown.
+    self.hidden = false
+    self:Refresh()
+end
+
 function ATR:OnArenaPrep()
-    -- Enemy specs just became available; partner specs need an inspect.
+    -- New prep: reset to shown. Enemy specs are now available; partners need an inspect.
+    self.hidden = false
     self:RequestPartnerInspects()
     self:Refresh()
 end
@@ -251,8 +277,10 @@ function ATR:OnRosterUpdate()
     self:Refresh()
 end
 
-function ATR:OnUnitAura(_, unit)
-    if unit == "player" then
+-- The round-start marker re-shows the reminder at the start of each round.
+function ATR:OnSpellcast(_, unit, _, spellID)
+    if unit == "player" and spellID == ROUND_START_SPELL then
+        self.hidden = false
         self:Refresh()
     end
 end
@@ -265,23 +293,72 @@ end
 -- Evaluate the rules and push the result to the display.
 function ATR:Refresh()
     if not self.db.profile.enabled then
+        self:Debug("Refresh: addon disabled, hiding")
         self:UpdateDisplay(nil)
         return
     end
 
     if self.testMode then
-        self:UpdateDisplay(self:Evaluate(true))
+        local messages = self:Evaluate(true)
+        self:Debug("Refresh: TEST mode -> %d message(s)", #messages)
+        self:UpdateDisplay(messages)
         return
     end
 
-    if not ns.IsInArenaPrep() then
+    if not self:ShouldShow() then
+        self:Debug("Refresh: hiding (instance=%s hidden=%s combat=%s)",
+            tostring(select(2, IsInInstance())), tostring(self.hidden),
+            tostring(UnitAffectingCombat("player")))
         self:UpdateDisplay(nil)
         return
     end
 
-    self:UpdateDisplay(self:Evaluate(false))
+    local messages = self:Evaluate(false)
+    self:Debug("Refresh: in arena prep -> %d message(s)", #messages)
+    self:UpdateDisplay(messages)
 end
 
 function ATR:OpenConfig()
     LibStub("AceConfigDialog-3.0"):Open(ADDON)
+end
+
+-- Slash handler: `/atr` opens config; subcommands toggle debug/test or print status.
+function ATR:HandleCommand(input)
+    local arg = (input or ""):lower():gsub("^%s+", ""):match("^(%S*)")
+
+    if arg == "debug" then
+        self.db.profile.debug = not self.db.profile.debug
+        self:Print("Debug " .. (self.db.profile.debug and "|cff33ff99ON|r" or "|cffff3333OFF|r")
+            .. ". Re-run an arena prep or toggle test mode to see output.")
+    elseif arg == "test" then
+        self.testMode = not self.testMode
+        self:Print("Test mode " .. (self.testMode and "|cff33ff99ON|r" or "|cffff3333OFF|r"))
+        self:Refresh()
+    elseif arg == "status" then
+        self:PrintStatus()
+    else
+        self:OpenConfig()
+    end
+end
+
+function ATR:PrintStatus()
+    local p = self.db.profile
+    self:Print(("enabled=%s | testMode=%s | debug=%s | instance=%s | hidden=%s | combat=%s | shouldShow=%s"):format(
+        tostring(p.enabled), tostring(self.testMode), tostring(p.debug),
+        tostring(select(2, IsInInstance())), tostring(self.hidden),
+        tostring(UnitAffectingCombat("player")), tostring(self:ShouldShow())))
+    self:Print(("arena opponents=%d, specs known=%d, soloShuffle=%s"):format(
+        GetNumArenaOpponents(), GetNumArenaOpponentSpecs(), tostring(C_PvP.IsSoloShuffle())))
+
+    local total = 0
+    for _, cat in ipairs(ns.categories) do
+        local n = #p.rules[cat.key]
+        total = total + n
+        if n > 0 then
+            self:Print(("  %s: %d rule(s)"):format(cat.name, n))
+        end
+    end
+    if total == 0 then
+        self:Print("|cffff3333No rules configured.|r Open config with /atr and add some.")
+    end
 end

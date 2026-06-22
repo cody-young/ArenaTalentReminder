@@ -14,9 +14,17 @@ Death Knight - Unholy but missing Way of the Crane."*
 - `Core.lua` — AceAddon object (`ns.ATR`), the lookup tables (`classMap`,
   `specMap`, `mapMap`/`mapNames`, `casters`, `melee`, comp/bracket names), the
   talent helpers `ns.CanSpec` / `ns.IsSpecced` (ported from `CanSpec`/`IsSpecced`),
-  the `ns.IsInArenaPrep` gate (Arena Preparation buff, spell 32727), AceDB
-  defaults, event registration, and `ATR:Refresh()` which gates + drives the
-  display.
+  the `ATR:ShouldShow()` gate, AceDB defaults, event registration, and
+  `ATR:Refresh()` which gates + drives the display.
+
+  Arena-prep detection (`ATR:ShouldShow()`): show while `IsInInstance() == "arena"`,
+  `self.hidden` is false, AND the player is not in combat (`UnitAffectingCombat`).
+  `self.hidden` is reset to false (show) on PLAYER_ENTERING_WORLD,
+  ARENA_PREP_OPPONENT_SPECIALIZATIONS, and the player casting the round-start
+  marker (228212, auto-cast at the start of each round — class-agnostic). It is
+  set true (hide) on PVP_MATCH_ACTIVE (gates open). The combat check is a
+  belt-and-suspenders hide that holds regardless of event timing. The old Arena
+  Preparation aura (32727) gate was unreliable and was removed.
 - `Engine.lua` — `ns.categories` (the 7 rule categories) and `ATR:Evaluate()`,
   the port of the WeakAura custom trigger. Each category has `values()` (dropdown),
   `label(rule)` (subject name for the message) and `match(rule)` (is the subject
@@ -30,11 +38,15 @@ Death Knight - Unholy but missing Way of the Crane."*
 
 ## Rule model
 
-Each rule is `{ subject = <dropdown index>, should = 1|2, talent = "<name>" }`
+Each rule is `{ subject = <dropdown index>, presence = 1|2, should = 1|2, talent = "<name>" }`
 stored under `db.profile.rules[categoryKey]` (`class`, `spec`, `compType`, `map`,
-`arenaType`, `partnerClass`, `partnerSpec`). `should` 1 = "Should have", 2 =
-"Shouldn't have". A rule only fires if `ns.CanSpec(talent)` is true (the talent is
-available to your current spec), so rules for other classes stay silent.
+`arenaType`, `partnerClass`, `partnerSpec`). `presence` 1 = subject "is present",
+2 = "is absent" (negation — e.g. *not* facing Unholy). `should` 1 = "Should have",
+2 = "Shouldn't have". The rule fires when the presence condition is met AND the
+talent (should/shouldn't) condition is violated. A rule only evaluates if
+`ns.CanSpec(talent)` is true (the talent is available to your current spec), so
+rules for other classes stay silent. `presence` defaults to 1 when missing, so
+pre-existing saved rules keep their old behavior.
 
 Talents are matched by **name** (compared against the spell name of each talent
 tree entry and PvP talent), faithful to the original WeakAura — so the talent

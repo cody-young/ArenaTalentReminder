@@ -5,6 +5,7 @@ local ADDON, ns = ...
 local ATR = ns.ATR
 
 local SHOULD_VALUES = { [1] = "Should have", [2] = "Shouldn't have" }
+local PRESENCE_VALUES = { [1] = "is present", [2] = "is absent" }
 
 -- Build the dynamic args (one inline group per rule) for a category.
 local function BuildCategoryArgs(cat)
@@ -24,7 +25,7 @@ local function BuildCategoryArgs(cat)
         order = 2,
         name = "Add Rule",
         func = function()
-            table.insert(rules, { subject = 1, should = 1, talent = "" })
+            table.insert(rules, { subject = 1, presence = 1, should = 1, talent = "" })
             ATR:RefreshOptions()
             ATR:Refresh()
         end,
@@ -48,25 +49,34 @@ local function BuildCategoryArgs(cat)
                 subject = {
                     type = "select",
                     order = 1,
-                    width = 1.4,
+                    width = 1.3,
                     name = cat.subjectName,
                     values = values,
                     sorting = sorting,
                     get = function() return rule.subject end,
                     set = function(_, v) rule.subject = v; ATR:Refresh() end,
                 },
-                should = {
+                presence = {
                     type = "select",
                     order = 2,
+                    width = 0.9,
+                    name = "When subject",
+                    values = PRESENCE_VALUES,
+                    get = function() return rule.presence or 1 end,
+                    set = function(_, v) rule.presence = v; ATR:Refresh() end,
+                },
+                should = {
+                    type = "select",
+                    order = 3,
                     width = 1.0,
-                    name = "Condition",
+                    name = "Then you",
                     values = SHOULD_VALUES,
                     get = function() return rule.should end,
                     set = function(_, v) rule.should = v; ATR:Refresh() end,
                 },
                 talent = {
                     type = "input",
-                    order = 3,
+                    order = 4,
                     width = 1.4,
                     name = "Talent name",
                     desc = "Exact talent name (including PvP talents) as it appears in-game.",
@@ -75,7 +85,7 @@ local function BuildCategoryArgs(cat)
                 },
                 remove = {
                     type = "execute",
-                    order = 4,
+                    order = 5,
                     width = 0.6,
                     name = "Delete",
                     func = function()
@@ -117,6 +127,15 @@ local function BuildOptions()
                         desc = "Show every configured rule on screen regardless of the current arena, so you can preview your setup outside of a match.",
                         get = function() return ATR.testMode end,
                         set = function(_, v) ATR.testMode = v; ATR:Refresh() end,
+                    },
+                    debug = {
+                        type = "toggle",
+                        order = 3,
+                        width = "full",
+                        name = "Debug messages",
+                        desc = "Print why each rule does or doesn't fire to the chat frame. Also: /atr debug, /atr status.",
+                        get = function() return ATR.db.profile.debug end,
+                        set = function(_, v) ATR.db.profile.debug = v end,
                     },
                     displayHeader = {
                         type = "header",

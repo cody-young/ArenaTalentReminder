@@ -189,32 +189,48 @@ end
 -- Evaluation
 --------------------------------------------------------------------------------
 
--- Returns an array of reminder strings (deduped). In test mode every rule's
--- subject is treated as present, so you can preview your full rule set.
+-- Returns an array of reminder strings (deduped). In test mode the presence
+-- condition of every rule is treated as met, so you can preview your full set.
 function ATR:Evaluate(isTest)
     local rules = self.db.profile.rules
     local messages, seen = {}, {}
 
     for _, cat in ipairs(ns.categories) do
-        for _, rule in ipairs(rules[cat.key]) do
+        for i, rule in ipairs(rules[cat.key]) do
             local talentName = rule.talent
-            if talentName and talentName ~= "" and ns.CanSpec(talentName) then
-                local found = isTest or cat.match(rule)
-                if found then
-                    local has = ns.IsSpecced(talentName)
-                    local should = rule.should or 1
-                    local subject = cat.label(rule)
+            if not talentName or talentName == "" then
+                self:Debug("[%s #%d] skipped: no talent name set", cat.key, i)
+            elseif not ns.CanSpec(talentName) then
+                self:Debug("[%s #%d] '%s' not available to your current spec (CanSpec=false) -> skipped",
+                    cat.key, i, talentName)
+            else
+                -- presence 1 = subject should be present, 2 = subject should be absent
+                local wantPresent = (rule.presence or 1) == 1
+                local matched = cat.match(rule)
+                local condMet = isTest or (matched == wantPresent)
+                local has = ns.IsSpecced(talentName)
+                local should = rule.should or 1
+                local subject = cat.label(rule)
+
+                self:Debug("[%s #%d] subject='%s' wantPresent=%s matched=%s condMet=%s | talent='%s' have=%s should=%s",
+                    cat.key, i, subject, tostring(wantPresent), tostring(matched),
+                    tostring(condMet), talentName, tostring(has),
+                    should == 1 and "have" or "drop")
+
+                if condMet then
+                    local context = wantPresent and ("Found " .. subject) or ("No " .. subject)
                     local msg
 
                     if should == 1 and not has then
-                        msg = ("Found %s but missing %s"):format(subject, talentName)
+                        msg = ("%s but missing %s"):format(context, talentName)
                     elseif should == 2 and has then
-                        msg = ("Found %s but have %s"):format(subject, talentName)
+                        msg = ("%s but have %s"):format(context, talentName)
                     end
 
                     if msg and not seen[msg] then
                         seen[msg] = true
                         messages[#messages + 1] = msg
+                        self:Debug("  -> REMIND: %s", msg)
                     end
                 end
             end
