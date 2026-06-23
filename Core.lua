@@ -246,9 +246,9 @@ function ATR:OnEnable()
     self:RegisterEvent("PLAYER_PVP_TALENT_UPDATE", "Refresh")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", "Refresh")
     self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "OnSpellcast")
-    self:RegisterEvent("PVP_MATCH_ACTIVE", "HideReminder")   -- gates open
-    self:RegisterEvent("PLAYER_REGEN_DISABLED", "Refresh")   -- entering combat
-    self:RegisterEvent("PLAYER_REGEN_ENABLED", "Refresh")    -- leaving combat
+    self:RegisterEvent("PVP_MATCH_ACTIVE", "HideReminder")        -- gates open
+    self:RegisterEvent("PLAYER_REGEN_DISABLED", "HideReminder")   -- entering combat
+    self:RegisterEvent("PLAYER_REGEN_ENABLED", "Refresh")         -- leaving combat
 
     self:UpdateDisplaySettings()
     self:Refresh()

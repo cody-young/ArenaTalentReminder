@@ -36,18 +36,22 @@ function ATR:CreateDisplay()
     f.icon:SetTexture(ARENA_PREP_ICON)
     f.icon:SetSize(BIG_ICON, BIG_ICON)
 
-    -- Actionable reminders: large, gold.
+    -- Actionable reminders: large, gold. Word wrap must stay ON: a non-wrapping
+    -- FontString renders only its first line, dropping every line after a |n, so
+    -- multiple reminders would collapse to one. We never set an explicit width, so
+    -- the string sizes to its longest line and only |n introduces line breaks.
     f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     f.text:SetJustifyH("LEFT")
     f.text:SetJustifyV("TOP")
-    f.text:SetWordWrap(false)
+    f.text:SetWordWrap(true)
     f.text:SetTextColor(1, 0.82, 0)
 
-    -- Informational suppression notes: smaller, gray.
+    -- Informational suppression notes: smaller, gray. Word wrap ON for the same
+    -- multi-line reason as f.text above.
     f.notes = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     f.notes:SetJustifyH("LEFT")
     f.notes:SetJustifyV("TOP")
-    f.notes:SetWordWrap(false)
+    f.notes:SetWordWrap(true)
     f.notes:SetTextColor(0.62, 0.62, 0.62)
 
     -- Dragging (only honored while unlocked).

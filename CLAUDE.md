@@ -22,9 +22,13 @@ Death Knight - Unholy but missing Way of the Crane."*
   `self.hidden` is reset to false (show) on PLAYER_ENTERING_WORLD,
   ARENA_PREP_OPPONENT_SPECIALIZATIONS, and the player casting the round-start
   marker (228212, auto-cast at the start of each round — class-agnostic). It is
-  set true (hide) on PVP_MATCH_ACTIVE (gates open). The combat check is a
-  belt-and-suspenders hide that holds regardless of event timing. The old Arena
-  Preparation aura (32727) gate was unreliable and was removed.
+  set true (hide) on PVP_MATCH_ACTIVE (gates open) and on PLAYER_REGEN_DISABLED
+  (entering combat) — the latter latches hidden so leaving combat won't re-show
+  the reminder until a fresh arena-prep signal (the round-start marker or
+  ARENA_PREP_OPPONENT_SPECIALIZATIONS) resets it. The combat check in
+  `ShouldShow()` is an additional belt-and-suspenders hide that holds regardless
+  of event timing. The old Arena Preparation aura (32727) gate was unreliable and
+  was removed.
 - `Engine.lua` — `ns.categories` (the 7 rule categories) and `ATR:Evaluate()`,
   the port of the WeakAura custom trigger. Each category has `values()` (dropdown),
   `label(rule)` (subject name for the message) and `match(rule)` (is the subject
