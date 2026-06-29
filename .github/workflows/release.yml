@@ -28,6 +28,16 @@ jobs:
             echo "CF_API_KEY is set (length ${#CF_API_KEY})."
           fi
 
+      - name: Verify Wago secret
+        env:
+          WAGO_API_KEY: ${{ secrets.WAGO_API_KEY }}
+        run: |
+          if [ -z "$WAGO_API_KEY" ]; then
+            echo "::warning title=Wago::WAGO_API_KEY secret is not set — Wago upload will be skipped."
+          else
+            echo "WAGO_API_KEY is set (length ${#WAGO_API_KEY})."
+          fi
+
       - name: Package and create GitHub release
         uses: BigWigsMods/packager@v2
         env:
@@ -36,5 +46,9 @@ jobs:
           #   - a CF_API_KEY repo secret (Settings > Secrets and variables > Actions)
           #   - a "## X-Curse-Project-ID: <id>" line in the .toc (from your CF project page)
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          # Wago upload. Requires:
+          #   - a WAGO_API_KEY repo secret (Settings > Secrets and variables > Actions)
+          #   - a "## X-Wago-Id: <id>" line in the .toc (from your Wago project page)
+          WAGO_API_KEY: ${{ secrets.WAGO_API_KEY }}
           # Optional: also publish to WoWInterface by adding a WOWI_API_TOKEN secret.
           # WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}

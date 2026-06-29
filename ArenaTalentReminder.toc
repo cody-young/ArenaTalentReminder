@@ -6,6 +6,7 @@
 ## SavedVariables: ArenaTalentReminderDB
 ## IconTexture: Interface\Icons\Spell_Nature_TimeStop
 ## X-Curse-Project-ID: 1583954
+## X-Wago-Id: arenatalentreminder
 
 # Libraries
 Libs\LibStub\LibStub.lua
