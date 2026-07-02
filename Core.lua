@@ -113,8 +113,11 @@ end
 
 -- Walks the active talent tree (and PvP talents) looking for an entry whose spell
 -- name matches `talentName`. `committedOnly` restricts to currently selected ranks.
+-- Matching is case-insensitive so minor typos in the saved talent name (e.g. a
+-- stray lowercase letter) don't silently break a rule.
 local function FindTalent(talentName, committedOnly)
     if not talentName or talentName == "" then return false end
+    talentName = talentName:lower()
 
     local configID = C_ClassTalents and C_ClassTalents.GetActiveConfigID()
     if configID then
@@ -130,7 +133,8 @@ local function FindTalent(talentName, committedOnly)
                             local entryInfo = C_Traits.GetEntryInfo(configID, entryID)
                             if entryInfo and entryInfo.definitionID then
                                 local def = C_Traits.GetDefinitionInfo(entryInfo.definitionID)
-                                if def and def.spellID and GetSpellName(def.spellID) == talentName then
+                                local name = def and def.spellID and GetSpellName(def.spellID)
+                                if name and name:lower() == talentName then
                                     return true
                                 end
                             end
@@ -145,14 +149,14 @@ local function FindTalent(talentName, committedOnly)
     if committedOnly then
         for _, id in pairs(C_SpecializationInfo.GetAllSelectedPvpTalentIDs() or {}) do
             local info = C_SpecializationInfo.GetPvpTalentInfo(id)
-            if info and info.name == talentName then return true end
+            if info and info.name and info.name:lower() == talentName then return true end
         end
     else
         local slot = C_SpecializationInfo.GetPvpTalentSlotInfo(1)
         if slot and slot.availableTalentIDs then
             for _, id in pairs(slot.availableTalentIDs) do
                 local info = C_SpecializationInfo.GetPvpTalentInfo(id)
-                if info and info.name == talentName then return true end
+                if info and info.name and info.name:lower() == talentName then return true end
             end
         end
     end
