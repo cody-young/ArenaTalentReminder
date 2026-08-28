@@ -9,12 +9,12 @@ local ATR = ns.ATR
 --------------------------------------------------------------------------------
 
 local function ClassName(classID)
-    local name = GetClassInfo(classID)
+    local name = ns.ClassInfo(classID)
     return name or ("Class " .. tostring(classID))
 end
 
 local function SpecName(specID)
-    local _, specName, _, _, _, _, className = GetSpecializationInfoByID(specID)
+    local _, specName, _, _, _, _, className = ns.SpecInfoByID(specID)
     if className and specName then
         return className .. " - " .. specName
     end
@@ -38,7 +38,7 @@ end
 local function EnemyHasClass(classID)
     for i = 1, GetNumArenaOpponentSpecs() do
         local spec = GetArenaOpponentSpec(i)
-        if spec and spec > 0 and GetClassIDFromSpecID(spec) == classID then
+        if spec and spec > 0 and ns.ClassIDFromSpecID(spec) == classID then
             return true
         end
     end
@@ -173,8 +173,8 @@ ns.categories = {
         label = function(rule) return SpecName(ns.specMap[rule.subject]) end,
         match = function(rule)
             local specID = ns.specMap[rule.subject]
-            return GetInspectSpecialization("party1") == specID
-                or GetInspectSpecialization("party2") == specID
+            return ns.InspectSpec("party1") == specID
+                or ns.InspectSpec("party2") == specID
         end,
     },
 }

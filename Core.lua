@@ -101,6 +101,73 @@ ns.melee = {
 }
 
 --------------------------------------------------------------------------------
+-- API compat
+--------------------------------------------------------------------------------
+-- 12.0 moved the specialization globals under C_SpecializationInfo and dropped
+-- GetClassIDFromSpecID outright, so every one of them goes through a wrapper.
+
+local SpecInfo = C_SpecializationInfo or {}
+
+-- localizedName, classFile for a class ID.
+function ns.ClassInfo(classID)
+    if GetClassInfo then
+        local name, file = GetClassInfo(classID)
+        if name then return name, file end
+    end
+    local info = C_CreatureInfo and C_CreatureInfo.GetClassInfo(classID)
+    if info then return info.className, info.classFile end
+end
+
+-- id, name, description, icon, role, classFile, className
+function ns.SpecInfoByID(specID)
+    local fn = SpecInfo.GetSpecializationInfoByID or GetSpecializationInfoByID
+    if fn then return fn(specID) end
+end
+
+function ns.InspectSpec(unit)
+    local fn = SpecInfo.GetInspectSpecialization or GetInspectSpecialization
+    if fn then return fn(unit) end
+end
+
+-- Stand-in for the removed GetClassIDFromSpecID: build specID -> classID once
+-- from the classes we care about (ns.classMap covers all of them).
+local function BuildSpecToClass()
+    local out = {}
+    local specForClass = SpecInfo.GetSpecializationInfoForClassID or GetSpecializationInfoForClassID
+    local numSpecs = SpecInfo.GetNumSpecializationsForClassID or GetNumSpecializationsForClassID
+    for _, classID in ipairs(ns.classMap) do
+        for i = 1, (numSpecs and numSpecs(classID)) or 4 do
+            local specID = specForClass and specForClass(classID, i)
+            if specID then out[specID] = classID end
+        end
+    end
+    return out
+end
+
+local specToClass, classFileToID
+function ns.ClassIDFromSpecID(specID)
+    if not specID or specID == 0 then return nil end
+
+    -- An empty table means the lookup API was missing too, so don't cache it.
+    if not specToClass or not next(specToClass) then
+        specToClass = BuildSpecToClass()
+    end
+    if specToClass[specID] then return specToClass[specID] end
+
+    -- Last resort: derive it from the spec's own classFile.
+    local _, _, _, _, _, classFile = ns.SpecInfoByID(specID)
+    if not classFile then return nil end
+    if not classFileToID then
+        classFileToID = {}
+        for _, classID in ipairs(ns.classMap) do
+            local _, file = ns.ClassInfo(classID)
+            if file then classFileToID[file] = classID end
+        end
+    end
+    return classFileToID[classFile]
+end
+
+--------------------------------------------------------------------------------
 -- Talent helpers (ported from CanSpec / IsSpecced)
 --------------------------------------------------------------------------------
 
