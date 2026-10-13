@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120105, 120100
 ## Title: Arena Talent Reminder
 ## Notes: Reminds you to swap talents based on the enemy team, your partners, the map, and the bracket while in arena prep.
 ## Author: youngcody
